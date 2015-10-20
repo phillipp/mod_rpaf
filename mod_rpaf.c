@@ -233,6 +233,12 @@ static char *last_not_in_array(request_rec *r, apr_array_header_t *forwarded_for
     for (i = (forwarded_for->nelts); i > 0; ) {
         i--;
         rv = apr_sockaddr_info_get(&sa, fwd_ips[i], APR_UNSPEC, 0, 0, r->pool);
+
+        // IPv6 is not supported. Trust that this IP is okay...
+        if(rv == APR_OS_START_EAIERR + 9) {
+          return fwd_ips[earliest_legit_i];
+        }
+
         if (rv == APR_SUCCESS) {
             earliest_legit_i = i;
             if (!is_in_array(sa, proxy_ips))
